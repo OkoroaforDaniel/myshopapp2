@@ -5,6 +5,8 @@ import HeaderAuth from './header-auth';
 
 export const metadata = { title: 'Tandoori Pizza Port Harcourt — Order Online', description: 'Wood-fired tandoori pizzas, kebabs & more in Port Harcourt. Open daily.' };
 
+export const viewport = { width: 'device-width', initialScale: 1 };
+
 export default function RootLayout({ children }: any) {
   return (
     <html lang="en">
@@ -15,6 +17,7 @@ export default function RootLayout({ children }: any) {
           <header className="hdr">
             <div className="wrap hdr-in">
               <a href="/" className="brand"><span className="brand-mark">◍</span><span>Tandoori Pizza<small>PORT HARCOURT · EST. 2012</small></span></a>
+              <details className="mnav"><summary>☰</summary><nav><a href="/">Home</a><a href="/#menu">Special Offers</a><a href="/checkout">Track Order</a><a href="/login">Login</a><a href="/signup">Sign up</a></nav></details>
               <nav className="nav"><a href="/">Home</a><a href="/#menu" className="hot">Special Offers</a><a href="/checkout">Track Order</a></nav>
               <div className="hdr-act">
                 <div className="search"><span>⌕</span><input id="q" placeholder="Search cravings..." /></div>
