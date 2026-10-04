@@ -14,14 +14,6 @@ services:
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false
-      - key: MAILGUN_API_KEY
-        sync: false
-      - key: MAILGUN_DOMAIN
-        sync: false
-      - key: MAILGUN_FROM
-        sync: false
-      - key: SHOP_OWNER_EMAIL
-        sync: false
       - key: FRONTEND_URL
         sync: false
       - key: PAYSTACK_PUBLIC_KEY

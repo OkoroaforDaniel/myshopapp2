@@ -1,7 +1,9 @@
+from datetime import datetime, timezone
+
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
-from .schemas import CheckoutRequest, ProfileUpsert, SignupRequest, LoginRequest
+from .schemas import CheckoutRequest, ProfileUpsert, SignupRequest, LoginRequest, CartSyncRequest
 from .supabase_client import get_supabase_admin, get_supabase_anon
 from .mailer import send_email, order_email_html
 from .payments import verify_paystack, send_whatsapp
@@ -162,11 +164,10 @@ async def checkout(body: CheckoutRequest, user: dict | None = Depends(get_user_f
     ]
     db.table("order_items").insert(lines).execute()
 
-    # Confirmation emails (don't fail order if mail fails)
+    # Confirmation email disabled (Mailgun removed) — customer sees /success page.
+    # Order alerts go via WhatsApp below.
     html = order_email_html(body.customer_name, order["id"], lines, total, body.fulfilment)
     await send_email(str(body.customer_email), f"Order confirmed #{order['id'][:8]} — Tandoori Pizza Port Harcourt", html)
-    if settings.SHOP_OWNER_EMAIL:
-        await send_email(settings.SHOP_OWNER_EMAIL, f"NEW ORDER #{order['id'][:8]} ₦{total:,.0f}", html)
 
     # WhatsApp alert to owner (free via CallMeBot, skipped if not configured)
     item_summary = ", ".join(f"{l['qty']}x {l['product_name']}" for l in lines[:5])
@@ -179,6 +180,41 @@ async def checkout(body: CheckoutRequest, user: dict | None = Depends(get_user_f
 def paystack_key():
     """Public key for frontend inline payment."""
     return {"public_key": settings.PAYSTACK_PUBLIC_KEY or ""}
+
+# ---------- SHARED CART (web <-> mobile realtime sync) ----------
+# One row per user in `carts` table: {user_id, items, coupon_code, fulfilment, updated_at}
+# Web + Flutter both read/write here with the SAME Bearer token, so
+# "add on web -> instantly on mobile" works via Supabase Realtime.
+
+@app.get("/api/cart")
+def get_cart(user: dict | None = Depends(get_user_from_token)):
+    if not user:
+        raise HTTPException(401, "Login required for synced cart")
+    db = get_supabase_admin()
+    res = db.table("carts").select("*").eq("user_id", user["id"]).maybe_single().execute()
+    row = res.data if hasattr(res, "data") else None
+    if not row:
+        return {"items": [], "coupon_code": "", "fulfilment": "Delivery"}
+    return {"items": row.get("items") or [], "coupon_code": row.get("coupon_code") or "",
+            "fulfilment": row.get("fulfilment") or "Delivery",
+            "updated_at": row.get("updated_at")}
+
+@app.put("/api/cart")
+def put_cart(body: CartSyncRequest, user: dict | None = Depends(get_user_from_token)):
+    if not user:
+        raise HTTPException(401, "Login required for synced cart")
+    db = get_supabase_admin()
+    payload = {"user_id": user["id"],
+               "items": [i.model_dump() for i in body.items],
+               "coupon_code": body.coupon_code or "",
+               "fulfilment": body.fulfilment or "Delivery",
+               # refreshed on every write so clients can show "last updated by"
+               "updated_at": datetime.now(timezone.utc).isoformat()}
+    db.table("carts").upsert(payload, on_conflict="user_id").execute()
+    return {"ok": True, "items": payload["items"],
+            "coupon_code": payload["coupon_code"],
+            "fulfilment": payload["fulfilment"],
+            "updated_at": payload["updated_at"]}
 
 @app.get("/api/orders/{order_id}")
 def get_order(order_id: str):

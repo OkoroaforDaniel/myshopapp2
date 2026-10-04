@@ -5,12 +5,9 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str = ""
     SUPABASE_SERVICE_KEY: str = ""
     SUPABASE_JWT_SECRET: str = ""
-    MAILGUN_API_KEY: str = ""
-    MAILGUN_DOMAIN: str = ""
-    MAILGUN_FROM: str = "Tandoori Pizza PH <orders@example.com>"
-    SHOP_OWNER_EMAIL: str = ""
     FRONTEND_URL: str = "http://localhost:3000"
     GOOGLE_CLIENT_ID: str = ""
+    SHOP_OWNER_EMAIL: str = ""  # kept for compatibility, not used (no email)
     # Paystack (Nigeria cards / transfer / USSD)
     PAYSTACK_SECRET_KEY: str = ""
     PAYSTACK_PUBLIC_KEY: str = ""
