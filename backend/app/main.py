@@ -13,11 +13,12 @@ app = FastAPI(title="MyShopApp2 API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    # Allow local dev + any Vercel preview/production URL.
+    # Allow local dev + any Vercel preview/production URL + phone testing
+    # for the Flutter mobile app (http://<mac-ip>:8081 from iPhone Safari).
     # NOTE: when allow_credentials=True, browsers reject "*" — so we list
-    # explicit origins + allow_origin_regex for Vercel.
+    # explicit origins + allow_origin_regex for Vercel + private LAN IPs.
     allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://.*\.vercel\.app|http://10\.\d+\.\d+\.\d+:\d+|http://192\.168\.\d+\.\d+:\d+|http://172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
