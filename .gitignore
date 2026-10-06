@@ -3,3 +3,18 @@ frontend/.env.local
 frontend/.next/
 node_modules/
 .DS_Store
+# Python bytecode
+__pycache__/
+*.pyc
+# Next.js build info
+frontend/tsconfig.tsbuildinfo
+# Flutter build outputs (source stays, APKs are built in CI / locally for Drive)
+mobile/build/
+mobile/.dart_tool/
+mobile/android/.gradle/
+mobile/ios/Pods/
+.dart_tool/
+# Local keystores — never commit signing keys
+*.jks
+*.keystore
+key.properties
